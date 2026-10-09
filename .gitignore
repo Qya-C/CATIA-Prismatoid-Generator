@@ -1,0 +1,39 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.venv/
+venv/
+env/
+.python-version
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# ---- PyInstaller 构建产物 ----
+# 打包结果不入库（本仓库只提供源码），需要 EXE 请自行运行 build.bat
+_build_output/
+*.spec
+CATIA_Prismatoid_Generator.exe
+CATIA_Prismatoid_Generator/
+dist/
+build/
+
+# ---- 运行期产物 ----
+# 无控制台的打包版本把崩溃信息写入这里
+launch_log.txt
+
+# ---- 备份 / 临时文件 ----
+*.bak
+*.bak_*
+_backup_1.0/
+_manifest.txt
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+desktop.ini
+~$*
