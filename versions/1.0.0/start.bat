@@ -3,7 +3,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 rem =====================================================================
-rem  start.bat - launch v1.0 (no console window)
+rem  start.bat - launch 1.0.0 (no console window)
 rem
 rem  Double-click this file. If it fails, use start_debug.bat instead.
 rem  NOTE: intentionally pure ASCII (see build.bat for why).

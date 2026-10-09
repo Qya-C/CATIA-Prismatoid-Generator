@@ -3,7 +3,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 rem =====================================================================
-rem  start_debug.bat - launch v1.0 WITH a console window
+rem  start_debug.bat - launch 1.0.0 WITH a console window
 rem
 rem  Use this one when something goes wrong: errors stay on screen.
 rem  NOTE: intentionally pure ASCII (see build.bat for why).

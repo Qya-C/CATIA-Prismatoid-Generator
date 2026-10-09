@@ -53,10 +53,11 @@ V_i(t) = C₀ + t·h·N + [1 + t(k−1)]·(x_i·u + y_i·v) + t·p
 
 | 版本 | 目录 | 状态 | 能力 |
 |---|---|---|---|
-| **v2.0** | [`versions/v2.0`](versions/v2.0) | **现役 / 推荐** | 斜置、任意基准面（标准面 / 原点+法向 / 三点确定）、任意轮廓（正 n 边形 / 星形 / 顶点表）、四类输入校验、可自由缩放的界面 |
-| v1.0 | [`versions/v1.0`](versions/v1.0) | 已冻结（保留供对照） | 六种图形，底面限正 n 边形或圆，基准面限 XY/YZ/ZX |
+| **1.0.1** | [`versions/1.0.1`](versions/1.0.1) | **现役 / 推荐** | 斜置、任意基准面（标准面 / 原点+法向 / 三点确定）、任意轮廓（正 n 边形 / 星形 / 顶点表）、四类输入校验、可自由缩放的界面 |
+| 1.0.0 | [`versions/1.0.0`](versions/1.0.0) | 首个冻结版（保留供对照） | 六种图形，底面限正 n 边形或圆，基准面限 XY/YZ/ZX |
 
-**新用户请直接用 v2.0。** v1.0 是早期版本，保留是为了对照旧行为，不再更新。
+**新用户请直接用 1.0.1。** 1.0.0 是首个冻结版，保留是为了对照旧行为，不再更新。
+后续版本规划：**2.0.0**（大版本，尚未创建）。
 
 各版本目录内都有自己的 `README.md` 与 `CHANGELOG.md`。
 
@@ -80,10 +81,10 @@ python -m pip install pycatia PySide6 pywin32
 
 ---
 
-## 快速开始（以 v2.0 为例）
+## 快速开始（以 1.0.1 为例）
 
 ```powershell
-cd versions/v2.0
+cd versions/1.0.1
 
 REM 方式一：直接运行源码
 python main_v2.py
@@ -113,13 +114,13 @@ README.md                  本文件
 LICENSE                    MIT
 .gitignore
 versions/
-    v1.0/                  已冻结的旧版
+    1.0.0/                 首个冻结版
         catia_controller_v1.py
         main.py
         diagnose_v1.py
         rthook_log.py
         build.bat / start.bat / start_debug.bat
-    v2.0/                  现役版
+    1.0.1/                 现役版（简化界面 + 斜置）
         catia_controller_v2.py     几何内核
         main_v2.py                 图形界面（PySide6）
         diagnose_v2.py             命令行能力自检

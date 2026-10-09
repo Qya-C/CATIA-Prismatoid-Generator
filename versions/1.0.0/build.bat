@@ -3,7 +3,7 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 rem =====================================================================
-rem  build.bat - package v1.0 into a single double-clickable EXE
+rem  build.bat - package 1.0.0 into a single double-clickable EXE
 rem
 rem  Output: .\CATIA_Prismatoid_Generator.exe
 rem

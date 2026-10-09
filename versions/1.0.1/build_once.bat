@@ -5,7 +5,7 @@ cd /d "%~dp0"
 rem =====================================================================
 rem  build_once.bat - single-pass build (internal; normally run build.bat)
 rem
-rem  2.0 changes vs 1.0:
+rem  1.0.1 changes vs 1.0.0:
 rem    * entry script : main_v2.py            (was main.py)
 rem    * kernel module: catia_controller_v2   (was catia_controller_v1)
 rem
