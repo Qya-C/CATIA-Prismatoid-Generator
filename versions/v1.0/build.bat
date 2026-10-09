@@ -3,54 +3,112 @@ setlocal EnableExtensions
 cd /d "%~dp0"
 
 rem =====================================================================
-rem  build.bat - package the plugin into a single double-clickable EXE
+rem  build.bat - package v1.0 into a single double-clickable EXE
 rem
-rem  Requires: Python 3.11 (64-bit, same bitness as CATIA) + PyInstaller
+rem  Output: .\CATIA_Prismatoid_Generator.exe
 rem
-rem  Current mode: ONEFILE = 1  (single EXE, safe to copy anywhere)
-rem
-rem  Output: .\CATIA_Prismatoid_Generator.exe   (next to main.py)
-rem
-rem  Icon:
-rem    Optional. Drop an app.ico next to this script and it is used
-rem    automatically - no edit needed. Generate one with:
-rem        python make_icon.py --placeholder
-rem    If app.ico is absent, the build simply runs without a custom icon.
-rem
-rem  NOTE for ONEFILE builds:
-rem    * Startup takes 5-10 seconds (contents are unpacked to %TEMP% each run)
-rem    * Antivirus software may flag the EXE; whitelist it if needed
-rem    * %TEMP% must be writable
+rem  NOTE: this file is intentionally pure ASCII. cmd.exe reads .bat files
+rem        byte-wise using the current code page, so non-ASCII text can eat
+rem        neighbouring command characters and break parsing.
 rem =====================================================================
 
-rem ---------- switches ----------
 set "ONEFILE=1"
 set "ICONNAME=app.ico"
 
-rem ---------- interpreter ----------
-set "PY=C:\Users\eraria\AppData\Local\Programs\Python\Python311\python.exe"
-if exist "%PY%" goto :args
-echo [WARN] Configured python.exe not found, falling back to "py -3".
-set "PY=py -3"
+rem ---------------------------------------------------------------------
+rem  Locate a usable Python 3 interpreter.
+rem
+rem  Every candidate must actually run "import sys" before it is accepted:
+rem    a) the bare command "python" often resolves to a Microsoft Store
+rem       alias stub that does nothing;
+rem    b) `where python` also matches path FRAGMENTS (a folder merely named
+rem       like "...python..."), yielding a truncated path.
+rem
+rem  NOTE: this block deliberately uses goto labels instead of nesting a
+rem  "for /f" inside an "if (...)" block -- cmd.exe mis-parses that and
+rem  reports a misleading "Edit was unexpected at this time".
+rem ---------------------------------------------------------------------
+set "PY="
+set "PY_ARGS="
+
+if not defined PYTHON_EXE goto :py_local
+if not exist "%PYTHON_EXE%" goto :py_local
+"%PYTHON_EXE%" -c "import sys" >nul 2>&1
+if errorlevel 1 goto :py_local
+set "PY=%PYTHON_EXE%"
+goto :py_done
+
+:py_local
+if defined PY goto :py_done
+if not exist "%~dp0python.exe" goto :py_launcher
+set "PY=%~dp0python.exe"
+goto :py_done
+
+:py_launcher
+if defined PY goto :py_done
+py -3 -c "import sys" >nul 2>&1
+if errorlevel 1 goto :py_path
+set "PY=py"
+set "PY_ARGS=-3"
+goto :py_done
+
+:py_path
+if defined PY goto :py_done
+call :try_path
+if defined PY goto :py_done
+goto :py_none
+
+:try_path
+for /f "delims=" %%P in ('where python 2^>nul') do call :probe "%%~fP"
+goto :eof
+
+:probe
+if defined PY goto :eof
+if not exist %1 goto :eof
+%1 -c "import sys" >nul 2>&1
+if errorlevel 1 goto :eof
+set "PY=%~1"
+goto :eof
+
+:py_none
+echo.
+echo [ERROR] No working Python 3 found.
+echo.
+echo Two ways to fix:
+echo   1) Edit this file and set PYTHON_EXE to your python.exe full path.
+echo   2) Install Python 3.11+ ^(64-bit^) from python.org; the "py"
+echo      launcher it installs is enough.
+echo.
+pause
+exit /b 1
+
+:py_done
+
 
 :args
 if "%ONEFILE%"=="1" (set "MODE_ARG=--onefile") else (set "MODE_ARG=--onedir")
 
-rem Icon is used only if present; no warning when missing.
 set "ICON_ARG="
 if exist "%ICONNAME%" set "ICON_ARG=--icon %ICONNAME%"
 
-rem Output goes right next to main.py.
 set "DISTPATH=."
 
 echo.
 echo === 0) Environment ===
-%PY% -c "import sys, platform; print('Python  :', sys.version.split()[0]); print('Bitness :', platform.architecture()[0]); print('Exe     :', sys.executable)"
+if "%PY_ARGS%"=="-3" (
+    py -3 -c "import sys, platform; print('Python  :', sys.version.split()[0]); print('Bitness :', platform.architecture()[0]); print('Exe     :', sys.executable)"
+) else (
+    "%PY%" -c "import sys, platform; print('Python  :', sys.version.split()[0]); print('Bitness :', platform.architecture()[0]); print('Exe     :', sys.executable)"
+)
 if errorlevel 1 goto :fail
 
 echo.
 echo === 1) Kernel import check ===
-%PY% -c "import importlib; m = importlib.import_module('catia_controller_v1'); print('module  :', m.__file__); print('version :', m.__version__)"
+if "%PY_ARGS%"=="-3" (
+    py -3 -c "import importlib; m = importlib.import_module('catia_controller_v1'); print('module  :', m.__file__)"
+) else (
+    "%PY%" -c "import importlib; m = importlib.import_module('catia_controller_v1'); print('module  :', m.__file__)"
+)
 if errorlevel 1 (
     echo.
     echo [FAIL] Cannot import catia_controller_v1.
@@ -68,13 +126,13 @@ echo rthook_log.py found.
 
 echo.
 echo === 3) PyInstaller ===
-%PY% -m PyInstaller --version >nul 2>&1
+if "%PY_ARGS%"=="-3" (py -3 -m PyInstaller --version >nul 2>&1) else ("%PY%" -m PyInstaller --version >nul 2>&1)
 if errorlevel 1 (
     echo PyInstaller not found. Installing...
-    %PY% -m pip install --upgrade pyinstaller
+    if "%PY_ARGS%"=="-3" (py -3 -m pip install --upgrade pyinstaller) else ("%PY%" -m pip install --upgrade pyinstaller)
     if errorlevel 1 goto :fail
 )
-%PY% -m PyInstaller --version
+if "%PY_ARGS%"=="-3" (py -3 -m PyInstaller --version) else ("%PY%" -m PyInstaller --version)
 
 echo.
 echo === 4) Clean previous output ===
@@ -88,52 +146,34 @@ echo === 5) Build (1-3 minutes; do NOT close this window) ===
 echo   mode : %MODE_ARG%
 if defined ICON_ARG (echo   icon : %ICON_ARG%) else (echo   icon : none)
 echo.
-%PY% -m PyInstaller --noconfirm --clean %MODE_ARG% --windowed %ICON_ARG% ^
-    --name CATIA_Prismatoid_Generator ^
-    --collect-all pycatia ^
-    --hidden-import catia_controller_v1 ^
-    --hidden-import win32com.client ^
-    --hidden-import pywintypes ^
-    --hidden-import pythoncom ^
-    --runtime-hook rthook_log.py ^
-    --distpath "%DISTPATH%" ^
-    --workpath "_build_output\build" ^
-    --specpath "_build_output" ^
-    main.py
+
+set "PYI_ARGS=--noconfirm --clean %MODE_ARG% --windowed %ICON_ARG% --name CATIA_Prismatoid_Generator --collect-all pycatia --hidden-import catia_controller_v1 --hidden-import win32com.client --hidden-import pywintypes --hidden-import pythoncom --runtime-hook rthook_log.py --distpath "%DISTPATH%" --workpath "_build_output\build" --specpath "_build_output" main.py"
+
+if "%PY_ARGS%"=="-3" (
+    py -3 -m PyInstaller %PYI_ARGS%
+) else (
+    "%PY%" -m PyInstaller %PYI_ARGS%
+)
 if errorlevel 1 goto :fail
 
 echo.
 echo === 6) Done ===
 if "%ONEFILE%"=="1" (
-    if exist "CATIA_Prismatoid_Generator.exe" goto :ok_onefile
-    echo [FAIL] Expected CATIA_Prismatoid_Generator.exe but it was not found.
-    goto :fail
+    if not exist "CATIA_Prismatoid_Generator.exe" (
+        echo [FAIL] Expected CATIA_Prismatoid_Generator.exe but it was not found.
+        goto :fail
+    )
+    echo   Single EXE : %CD%\CATIA_Prismatoid_Generator.exe
+    echo   You can copy this one file anywhere.
 ) else (
-    if exist "CATIA_Prismatoid_Generator\CATIA_Prismatoid_Generator.exe" goto :ok_onedir
-    echo [FAIL] Expected the onedir folder but it was not found.
-    goto :fail
+    echo   EXE folder : %CD%\CATIA_Prismatoid_Generator
+    echo   NOTE: keep the EXE together with its _internal folder.
 )
-
-:ok_onefile
-echo   Single EXE : %CD%\CATIA_Prismatoid_Generator.exe
-for %%F in ("CATIA_Prismatoid_Generator.exe") do echo   Size       : %%~zF bytes
-echo.
-echo   This one file can be copied anywhere (desktop, USB stick, another PC).
 echo.
 echo Next steps:
 echo   1. Start CATIA V5 and open a new Part document.
-echo   2. Run the EXE. First launch takes 5-10 seconds - be patient.
-echo   3. Generate a shape to confirm CATIA connectivity.
-echo   4. If nothing appears, read launch_log.txt next to the EXE.
-echo.
-pause
-exit /b 0
-
-:ok_onedir
-echo   EXE folder : %CD%\CATIA_Prismatoid_Generator
-echo   EXE file   : %CD%\CATIA_Prismatoid_Generator\CATIA_Prismatoid_Generator.exe
-echo.
-echo   NOTE: keep the EXE together with its _internal folder.
+echo   2. Run the EXE. Onefile builds need 5-10 seconds to start.
+echo   3. If nothing appears, read launch_log.txt next to the EXE.
 echo.
 pause
 exit /b 0
@@ -142,5 +182,5 @@ exit /b 0
 echo.
 echo [FAIL] See the messages above.
 echo.
-pause
+pause >nul
 exit /b 1
